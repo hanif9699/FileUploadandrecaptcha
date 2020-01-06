@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <title>Form</title>
+</head>
+
+<body>
+    <div class="container"><br />
+        <h1>Google Recaptcha Tutorial</h1><br />
+        <form method="post" id="captcha">
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="form-group col-md-4">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" name="name">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="form-group col-md-4">
+                    <div class="g-recaptcha" data-sitekey="6LeaWcoUAAAAACrallpEDj9EIo3rcetyT6DfAZ9L"></div>
+                </div>
+            </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="form-group col-md-4">
+            <button type="submit" class="btn btn-success">Send</button>
+        </div>
+    </div>
+    </form>
+    </div>
+</body>
+<script>
+    var url = 'https://www.google.com/recaptcha/api.js';
+    var response = jQuery.getScript(url);
+    var form = document.getElementById('captcha').addEventListener('submit', submitForm);
+    function submitForm(e) {
+        e.preventDefault();
+        var captcha = document.querySelector('#g-recaptcha-response').value
+        if (response.state() === 'resolved') {
+            fetch('/send', {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json, application/xml, text/plain, text/html, *.*',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    captcha: captcha
+                }),
+            })
+                .then(function (data) {
+                    console.log(data)
+                    data = data.json();
+                    return data;
+                }).then(function(data){
+                    if(data.responseSuccess == "Sucess"){
+                        grecaptcha.reset()
+                    }
+                    else{
+                        alert(data.responseError)
+                    }
+                });
+        }
+    }
+
+
+
+</script>
+
+</html>
