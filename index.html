@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -27,6 +26,13 @@
                     <div class="g-recaptcha" data-sitekey="6LeaWcoUAAAAACrallpEDj9EIo3rcetyT6DfAZ9L"></div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="form-group col-md-4">
+                    <label for="name">File:</label>
+                    <input type="file" class="form-control" name="file" id="file">
+                </div>
+            </div>
     </div>
     <div class="row">
         <div class="col-md-4"></div>
@@ -38,9 +44,46 @@
     </div>
 </body>
 <script>
+    var fileobject;
     var url = 'https://www.google.com/recaptcha/api.js';
     var response = jQuery.getScript(url);
+    var file = document.getElementById('file').addEventListener('change', handlefile);
     var form = document.getElementById('captcha').addEventListener('submit', submitForm);
+    function handlefile(e) {
+        var sign = '';
+        var fileinput = $(e.currentTarget).get(0);
+        var fileobj = fileinput.files[0];
+        console.log(fileobj);
+        var reader = new FileReader();
+
+        reader.onload = function (file) {
+            var filearray = new Uint8Array(reader.result);
+            var blob = new Blob([reader.result], { type:fileobj.type });
+            var src = URL.createObjectURL(blob);
+            var chars = []; 
+            var len = filearray.byteLength;
+            for (let i=0; i<len; i++) { 
+                chars.push(String.fromCharCode(filearray[i])) 
+            } 
+            var binary = chars.join('');
+            var value= window.btoa(binary)
+            
+            var result = filearray.subarray(0, 4)
+            result.forEach(function (arr) {
+                sign = sign + arr.toString(16);
+
+            })
+            fileobject={
+                data:value,
+                name:fileobj.name,
+                signature:sign,
+            }
+            /* console.log(sign)
+
+            console.log(result) */
+        }
+        reader.readAsArrayBuffer(fileobj)
+    }
     function submitForm(e) {
         e.preventDefault();
         var captcha = document.querySelector('#g-recaptcha-response').value
@@ -53,18 +96,19 @@
                 },
                 body: JSON.stringify({
                     name: name,
-                    captcha: captcha
+                    captcha: captcha,
+                    file: fileobject
                 }),
             })
                 .then(function (data) {
                     console.log(data)
                     data = data.json();
                     return data;
-                }).then(function(data){
-                    if(data.responseSuccess == "Sucess"){
+                }).then(function (data) {
+                    if (data.responseSuccess == "Sucess") {
                         grecaptcha.reset()
                     }
-                    else{
+                    else {
                         alert(data.responseError)
                     }
                 });
