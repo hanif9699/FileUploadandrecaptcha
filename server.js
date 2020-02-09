@@ -21,7 +21,7 @@ app.post('/send',(req,res)=>{
   const file=req.body['file'];
   const filedata=file.data;
   const filename=file.name;
-  fs.writeFile(filename, filedata, 'base64', (err) => {
+  fs.writeFile(__dirname+"/uploaded_doc/"+filename, filedata, 'base64', (err) => {
     console.log(err);
 });
   const secretKey = "6LeaWcoUAAAAALOXkpzsJQEvyR3VR79UoxNPpO4a";
