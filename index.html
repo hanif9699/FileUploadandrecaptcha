@@ -44,7 +44,7 @@
     </div>
 </body>
 <script>
-    var fileobject;
+    var fileobject, fileobj
     var url = 'https://www.google.com/recaptcha/api.js';
     var response = jQuery.getScript(url);
     var file = document.getElementById('file').addEventListener('change', handlefile);
@@ -52,31 +52,31 @@
     function handlefile(e) {
         var sign = '';
         var fileinput = $(e.currentTarget).get(0);
-        var fileobj = fileinput.files[0];
+        fileobj = fileinput.files[0];
         console.log(fileobj);
         var reader = new FileReader();
 
         reader.onload = function (file) {
             var filearray = new Uint8Array(reader.result);
-            var blob = new Blob([reader.result], { type:fileobj.type });
+            var blob = new Blob([reader.result], { type: fileobj.type });
             var src = URL.createObjectURL(blob);
-            var chars = []; 
+            var chars = [];
             var len = filearray.byteLength;
-            for (let i=0; i<len; i++) { 
-                chars.push(String.fromCharCode(filearray[i])) 
-            } 
+            for (let i = 0; i < len; i++) {
+                chars.push(String.fromCharCode(filearray[i]))
+            }
             var binary = chars.join('');
-            var value= window.btoa(binary)
-            
+            var value = window.btoa(binary)
+
             var result = filearray.subarray(0, 4)
             result.forEach(function (arr) {
                 sign = sign + arr.toString(16);
 
             })
-            fileobject={
-                data:value,
-                name:fileobj.name,
-                signature:sign,
+            fileobject = {
+                data: value,
+                name: fileobj.name,
+                signature: sign,
             }
             /* console.log(sign)
 
@@ -85,10 +85,13 @@
         reader.readAsArrayBuffer(fileobj)
     }
     function submitForm(e) {
+        var formdata = new FormData();
+        formdata.append('userfile', fileobj)
+        console.log(formdata)
         e.preventDefault();
         var captcha = document.querySelector('#g-recaptcha-response').value
         if (response.state() === 'resolved') {
-            fetch('/send', {
+            /* fetch('/send', {
                 method: 'post',
                 headers: {
                     'Accept': 'application/json, application/xml, text/plain, text/html, *.*',
@@ -97,7 +100,8 @@
                 body: JSON.stringify({
                     name: name,
                     captcha: captcha,
-                    file: fileobject
+                    file: fileobject,
+                    blob:formdata
                 }),
             })
                 .then(function (data) {
@@ -111,7 +115,10 @@
                     else {
                         alert(data.responseError)
                     }
-                });
+                }); */
+            var request = new XMLHttpRequest();
+            request.open("POST", "/send");
+            request.send(formdata);
         }
     }
 

@@ -1,0 +1,129 @@
+import messaging from '@react-native-firebase/messaging';
+import { Platform } from 'react-native';
+import auth from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-community/async-storage';
+import { Notifications } from 'react-native-notifications';
+import * as NotificationDatabase from '../database/NotificationDatabase';
+
+export const logOnPlatform = (message) => {
+  if (Platform.OS === 'android') console.log(`Android::${message}`);
+  else console.log(`iOS::${message}`);
+};
+export class NotificationService {
+  constructor() {
+    this.messaging = messaging();
+  }
+
+  requestFCMPermission = async () => {
+    const granted = this.messaging.requestPermission();
+
+    if (granted) {
+      logOnPlatform(`User granted messaging permissions!`);
+    } else {
+      logOnPlatform(`User declined messaging permissions :(`);
+    }
+
+    return granted;
+  };
+
+  registerAppWithFCM = async () => {
+    try {
+      const register = await this.messaging.registerDeviceForRemoteMessages();
+
+      if (!register) {
+        return;
+      }
+    } catch (err) {
+      logOnPlatform(`Err: ${err}`);
+    }
+  };
+
+  configureRNNotifications = async () => {
+    Notifications.events().registerRemoteNotificationsRegistered((event) => {
+      logOnPlatform(`RNN Token Received ${event.deviceToken}`);
+    });
+
+    Notifications.events().registerRemoteNotificationsRegistrationFailed((event) => {
+      logOnPlatform(`Failed: ${event}`);
+    });
+
+    await Notifications.registerRemoteNotifications();
+  };
+
+  attachRNNNotificationHandlers() {
+    this.getInitialNotification = Notifications.getInitialNotification()
+      .then((notification) => {
+        // parse data and do something
+
+        logOnPlatform(`initial notification opened: ${JSON.stringify(notification)}`);
+      })
+      .catch(() => {
+        // empty
+      });
+
+    this.registerNotificationReceivedForeground = Notifications.events().registerNotificationReceivedForeground(
+      (notification, completion) => {
+        logOnPlatform(`Notifcation received in foreground: ${notification.title} : ${notification.body}`);
+
+        completion({ alert: true, sound: true, badge: true });
+      },
+    );
+
+    this.registerNotificationReceivedBackground = Notifications.events().registerNotificationReceivedBackground(
+      (_notification, completion) => {
+        logOnPlatform(`registerNotificationReceivedBackground`);
+
+        completion({ alert: true, sound: true, badge: true });
+      },
+    );
+
+    this.registerNotificationOpened = Notifications.events().registerNotificationOpened((notification, completion) => {
+      const { payload } = notification;
+
+      logOnPlatform(`Notification opened: ${payload}`);
+
+      completion();
+    });
+  }
+
+  initialize = async () => {
+    let fcmToken;
+
+    const hasPermission = await this.requestFCMPermission();
+
+    if (!hasPermission) return;
+
+    await this.registerAppWithFCM();
+
+    try {
+      fcmToken = (await this.messaging.getToken()) || (await AsyncStorage.getItem('fcmToken'));
+
+      logOnPlatform(`(FCM) Token Received ${fcmToken}`);
+    } catch (e) {
+      logOnPlatform(`No token Received error: ${e}`);
+    }
+
+    if (fcmToken) {
+      await AsyncStorage.setItem('fcmToken', fcmToken);
+      sendTokenToDatabase(fcmToken);
+    }
+
+    await this.configureRNNotifications();
+
+    this.attachRNNNotificationHandlers();
+  };
+}
+
+async function sendTokenToDatabase(token) {
+  if (auth().currentUser !== null && auth().currentUser.uid) {
+    if (token !== null) {
+      try {
+        await NotificationDatabase.addFcmToken(auth().currentUser.uid, token);
+        logOnPlatform(`Sending token to database succesfully`);
+        logOnPlatform(`UserId: ${auth().currentUser.uid}`);
+      } catch (err) {
+        logOnPlatform(`Sending token to database ${err}`);
+      }
+    }
+  }
+}

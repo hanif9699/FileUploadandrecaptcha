@@ -13,11 +13,12 @@ app.get('/',(req,res)=>{
 })
 
 app.post('/send',(req,res)=>{
-    /* console.log(req.body.captcha) */
+    console.log(req)
     if(req.body['captcha'] === undefined || req.body['captcha'] === '' || req.body['captcha'] === null)
   {
     return res.json({"responseError" : "Please select captcha first"});
   }
+  console.log(req.body['userfile'])
   const file=req.body['file'];
   const filedata=file.data;
   const filename=file.name;
