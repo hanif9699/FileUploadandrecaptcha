@@ -9,7 +9,7 @@ app.use(bodyparser.urlencoded({extended:false,limit: '50mb'}));
 app.use(bodyparser.json({limit: '50mb'}));
 
 app.get('/',(req,res)=>{
-    res.sendFile(__dirname+"/index.html");
+    res.sendFile(process.env.PWD+"/index.html");
 })
 
 app.post('/send',(req,res)=>{
