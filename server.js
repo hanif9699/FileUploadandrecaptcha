@@ -14,7 +14,9 @@ app.use(express.static(path.join(__dirname,'public')))
 const public=path.join(__dirname,'public')
 
 app.get('/',(req,res)=>{
+  console.log('hi start')
     res.sendFile(path.join(public,'index.html'));
+    console.log('hi end')
 })
 
 app.post('/send',(req,res)=>{
