@@ -5,6 +5,7 @@ const fs=require('fs')
 const path=require('path')
 
 const app=express();
+var port = process.env.PORT || 4000;
 
 app.use(bodyparser.urlencoded({extended:false,limit: '50mb'}));
 app.use(bodyparser.json({limit: '50mb'}));
@@ -47,6 +48,6 @@ app.post('/send',(req,res)=>{
 
 })
 
-app.listen(process.env.PORT,()=>{
+app.listen(port,()=>{
     console.log('server is runing')
 })
