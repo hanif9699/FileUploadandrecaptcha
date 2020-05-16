@@ -9,7 +9,7 @@ var port = process.env.PORT || 4000;
 
 app.use(bodyparser.urlencoded({extended:false,limit: '50mb'}));
 app.use(bodyparser.json({limit: '50mb'}));
-app.use(express.static(path.join(__dirname,'public')), { maxAge: 86400000 })
+app.use(express.static(path.join(__dirname,'public')))
 
 const public=path.join(__dirname,'public')
 
