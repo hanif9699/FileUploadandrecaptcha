@@ -8,7 +8,7 @@ const app=express();
 
 app.use(bodyparser.urlencoded({extended:false,limit: '50mb'}));
 app.use(bodyparser.json({limit: '50mb'}));
-app.use(express.static(path.join(__dirname,'public')))
+app.use(express.static(path.join(__dirname,'public')), { maxAge: 86400000 })
 
 const public=path.join(__dirname,'public')
 
